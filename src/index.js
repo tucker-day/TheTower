@@ -10,7 +10,7 @@ import PauseScene from './scenes/pauseScene.js'
 // settings shared by all scenes
 const SHARED_CONFIG = {
     width: 720,
-    height: 1080,
+    height: 1080
 }
 
 // list of all game scene objects
@@ -31,7 +31,7 @@ const config = {
     // contains settings for scaling the game (does not effect positioning
     // using width and height)
     scale: {
-        parent: 'phaser-example',
+        parent: 'gameContainer', // id of parent for the game canvas
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: SHARED_CONFIG.width,

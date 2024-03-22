@@ -4,11 +4,19 @@
     <meta charset="utf-8">
     <style>
       body {
-        margin: 0;
+        padding: 0px;
+        margin: 0px;
+        height: 100%;
         background-color: black;
+      }
+      #gameContainer {
+        height: 100%;
+        width: 100%;
+        overflow: hidden; /* Removes a small bit of padding at the bottom of the game canvas */
       }
     </style>
   </head>
   <body>
+    <div id = "gameContainer"></div> <!-- When the game starts, its canvas will be created inside this div -->
   </body>
 </html>
