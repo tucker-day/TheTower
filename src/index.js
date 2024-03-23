@@ -9,8 +9,8 @@ import PauseScene from './scenes/pauseScene.js'
 
 // settings shared by all scenes
 const SHARED_CONFIG = {
-    width: 720,
-    height: 1080
+    width: 300,
+    height: 400
 }
 
 // list of all game scene objects
@@ -35,14 +35,15 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: SHARED_CONFIG.width,
-        height: SHARED_CONFIG.height
+        height: SHARED_CONFIG.height,
+        zoom: 2
     },
 
     // physics settings
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 

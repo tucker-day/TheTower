@@ -7,6 +7,7 @@ class MenuScene extends BaseScene {
 
     create(){
         this.add.image(...this.screenCenter, 'default').setOrigin(0.5)
+        this.scene.start('Play')
     }
 }
 
