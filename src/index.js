@@ -9,7 +9,7 @@ import PauseScene from './scenes/pauseScene.js'
 
 // settings shared by all scenes
 const SHARED_CONFIG = {
-    width: 300,
+    width: 400,
     height: 400
 }
 
@@ -36,7 +36,6 @@ const config = {
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: SHARED_CONFIG.width,
         height: SHARED_CONFIG.height,
-        zoom: 2
     },
 
     // physics settings

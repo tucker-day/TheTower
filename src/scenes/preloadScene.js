@@ -6,7 +6,8 @@ class PreloadScene extends Phaser.Scene {
     }
 
     preload(){
-        this.load.image('default', 'assets/default.jpg')
+        this.load.image('wall', 'assets/wall.png')
+        this.load.image('brickBG', 'assets/brickBG.png')
         this.load.image('platform', 'assets/platform.jpg')
 
         this.load.spritesheet('knight', 'assets/knightSheet.png', {
