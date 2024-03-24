@@ -2,13 +2,13 @@ import Phaser from "phaser";
 
 class PreloadScene extends Phaser.Scene {
     constructor(sharedConfig) {
-        const config = {
+        const passConfig = {
             key: 'Preload',
 
             width: sharedConfig.width,
             height: sharedConfig.height
         }
-        super(config);
+        super(passConfig);
     }
 
     preload(){
@@ -19,12 +19,23 @@ class PreloadScene extends Phaser.Scene {
         this.load.spritesheet('knight', 'assets/knightSheet.png', {
             frameWidth: 120, frameHeight: 80
         })
+
+        this.load.spritesheet('fire', 'assets/fire.png', {
+            frameWidth: 96, frameHeight: 96
+        })
+
+        this.load.spritesheet('lava', 'assets/lava.png', {
+            frameWidth: 48, frameHeight: 48
+        })
     }
 
     create(){
+        this.createPlayerAnims()
+        this.createFireAnim()
+        this.createLavaAnim()
+
         this.scene.start('Menu')
 
-        this.createPlayerAnims()
     }
 
     // loads all animations for the player knight character
@@ -59,7 +70,7 @@ class PreloadScene extends Phaser.Scene {
         this.anims.create({
             key: 'p_attack',
             frames: this.anims.generateFrameNumbers('knight', { start: 20, end: 23 }),
-            frameRate: 10,
+            frameRate: 16,
             repeat: false
         })
 
@@ -92,6 +103,24 @@ class PreloadScene extends Phaser.Scene {
             key: 'p_test',
             frames: this.anims.generateFrameNumbers('knight', { start: 0, end: 41 }),
             frameRate: 12,
+            repeat: -1
+        })
+    }
+
+    createFireAnim() {
+        this.anims.create({
+            key: 'fire',
+            frames: this.anims.generateFrameNumbers('fire', { start: 0, end: 18 }),
+            frameRate: 12,
+            repeat: -1
+        })
+    }
+
+    createLavaAnim() {
+        this.anims.create({
+            key: 'lava',
+            frames: this.anims.generateFrameNumbers('lava', { start: 1, end: 7 }),
+            frameRate: 6,
             repeat: -1
         })
     }

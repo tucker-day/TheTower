@@ -2,14 +2,13 @@ import BaseScene from "./baseScene";
 
 class UiScene extends BaseScene {
     constructor(sharedConfig) {
-        const config = {
+        const passConfig = {
             key: 'Ui',
 
             width: sharedConfig.width,
             height: sharedConfig.height
         }
-
-        super(config);
+        super(passConfig);
     }
 
     create(){

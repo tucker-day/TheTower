@@ -4,7 +4,7 @@ class PlayScene extends BaseScene {
     constructor(sharedConfig) {
         const gameSize = 400
 
-        const config = {
+        const passConfig = {
             key: 'Play',
 
             width: gameSize,
@@ -14,14 +14,14 @@ class PlayScene extends BaseScene {
                 zoom: sharedConfig.width / gameSize
             }
         }
-        super(config)
+        super(passConfig)
 
         // game background
         this.background = null
 
         // player
         this.player = null
-
+        
         this.playerCanFly = false
         this.cameraPlayerYOffset = 40
         this.playerGravity = 750
@@ -30,6 +30,12 @@ class PlayScene extends BaseScene {
 
         this.playerFacingLeft = false
         this.playerAlive = true
+        this.playerAttacking = false
+
+        // player attack hitbox
+        this.playerAttackHitbox = null
+
+        this.playerAttackRange = 60
 
         // platforms
         this.platforms = null
@@ -37,14 +43,41 @@ class PlayScene extends BaseScene {
 
         // walls
         this.walls = null
+
+        this.wallsRenderDepth = 11
+
+        // lava
+        this.lava = null
+        this.lavaFiller = null
+
+        this.lavaInitY = 300
+        this.lavaInitSpeed = -10
+        this.lavaRenderDepth = 10
+
+        this.lavaMove = true
+
+        // fire effects
+        this.fireEffects = null
+
+        // game boundries
+        this.gameBoundsX = {
+            min: 16,
+            max: this.config.width -  16
+        }
     }
 
     create() {
         this.createBG()
-        this.createPlayer()
         this.createPlatforms()
         this.createWalls()
+        this.createPlayer()
+        this.createFire()
+        this.createLava()
         this.createControls()
+
+        // make the player collide with the enviroment
+        this.physics.add.collider(this.player, this.platforms)
+        this.physics.add.collider(this.player, this.walls)
 
         // make the camera follow the player
         this.cameras.main.startFollow(this.player, false, 0, 1, 0, this.cameraPlayerYOffset)
@@ -82,7 +115,28 @@ class PlayScene extends BaseScene {
         this.player.setBounce(0)
         this.player.body.setGravityY(this.playerGravity)
 
+        // create the player attack hitbox
+        // set scale seems to f everyting up for some reason so these values make no sence but trust me it works lol
+        this.playerAttackHitbox = this.physics.add.image(1000, 0)
+        this.playerAttackHitbox.setSize(this.playerAttackRange, this.player.height - 35)
+        this.playerAttackHitbox.setOrigin(-0.1, 1.2)
+
+        // add on animation end events
+        this.player.on('animationcomplete-p_death', this.gameOver, this)
+        this.player.on('animationcomplete-p_attack', this.playerAttackDone, this)
+
         this.player.play('p_idle')
+    }
+
+    gameOver() {
+        // dosen't do anything currently. will eventually create a menu
+    }
+
+    playerAttackDone() {
+        // set player attacking to false
+        this.playerAttacking = false
+
+        this.playerAttackHitbox.setPosition(1000, 0)
     }
 
     createWalls() {
@@ -101,17 +155,17 @@ class PlayScene extends BaseScene {
             .setFlipX(true)
 
         // fill group until screen is filled
-        do {
+        while (this.walls.getLast(true).y < this.config.height) {
             this.walls.create(0, this.walls.getLast(true).y + this.walls.getLast(true).height, 'wall')
                 .setImmovable(true)
         
             this.walls.create(this.config.width, this.walls.getLast(true).y, 'wall')
                 .setImmovable(true)
                 .setFlipX(true)
-        } while (this.walls.getLast(true).y < this.cameras.main.midPoint.y + this.config.height / 2)
+        }
 
-        // make the player collide with walls
-        this.physics.add.collider(this.player, this.walls)
+        // change lava render depth
+        this.walls.setDepth(this.wallsRenderDepth)
     }
 
     createPlatforms() {
@@ -129,10 +183,53 @@ class PlayScene extends BaseScene {
         this.platforms.create(this.screenCenter[0], this.screenCenter[1] - 2 * this.platformYDistance, 'platform')
             .setImmovable(true)
             .setOrigin(0.5, 0)
+    }
 
+    createLava() {
+        // create a group for lava objects
+        this.lava = this.physics.add.group();
 
-        // make the player collide with platforms
-        this.physics.add.collider(this.player, this.platforms)
+        // create the first lava object
+        let instance = this.lava.create(0, this.lavaInitY, 'lava')
+            .setImmovable(true)
+            .setOrigin(0, 0)
+            .play('lava')
+
+        instance.setBodySize(instance.width, instance.height * 0.6)
+        instance.setOffset(0, instance.height * 0.4)
+
+        debugger
+
+        // create the lava objects
+        while (this.lava.getLast(true).x + this.lava.getLast(true).width < this.config.width) {
+            let instance = this.lava.create(this.lava.getLast(true).x + this.lava.getLast(true).width, this.lavaInitY, 'lava')
+                .setImmovable(true)
+                .setOrigin(0, 0)
+                .play('lava')
+
+            instance.setBodySize(instance.width, instance.height * 0.6)
+            instance.setOffset(0, instance.height * 0.4)
+        }
+
+        // create the rest of the lava
+        this.lavaFiller = this.lava.create(0, this.lava.getLast(true).y + this.lava.getLast(true).height, 'lava')
+            .setImmovable(true)
+            .setOrigin(0, 0)
+        this.lavaFiller.setScale(this.config.width / this.lavaFiller.width, this.config.height / this.lavaFiller.height)
+
+        // make the player die when touching lava
+        this.physics.add.collider(this.player, this.lava, this.hitLava, null, this)
+
+        // change lava render depth
+        this.lava.setDepth(this.lavaRenderDepth)
+
+        // make the lava start moving
+        this.lava.setVelocityY(this.lavaInitSpeed)
+    }
+
+    createFire() {
+        // create a group of fire
+        this.fireEffects = this.add.group();
     }
 
     createControls() {
@@ -144,17 +241,30 @@ class PlayScene extends BaseScene {
         this.key.Z.on('down', this.playerJump, this)
 
         this.key.DOWN.on('down', this.playerQuickDecend, this)
+        this.key.X.on('down', this.startPlayerAttack, this)
     }
 
     playerJump() {
-        if (this.player.body.touching.down || this.playerCanFly) {
+        if ((this.player.body.touching.down || this.playerCanFly) && !this.playerAttacking) {
             this.player.setVelocityY(-this.playerJumpPower);
         }
     }
 
     playerQuickDecend() {
-        if (this.playerJumpPower > this.player.body.velocity.y) {
+        if (this.playerJumpPower > this.player.body.velocity.y && !this.playerAttacking) {
             this.player.setVelocityY(this.playerJumpPower);
+        }
+    }
+
+    startPlayerAttack() {
+        // make sure not already attacking
+        if (!this.playerAttacking)
+        {
+            this.playerAttacking = true
+            this.player.play('p_attack', true)
+            this.player.setVelocityX(0)
+            
+            this.playerAttackHitbox.setPosition((this.playerFacingLeft) ? this.player.x - this.playerAttackHitbox.width - 8: this.player.x, this.player.y)
         }
     }
 
@@ -162,44 +272,48 @@ class PlayScene extends BaseScene {
         this.controlPlayer()
         this.updatePlayerAnim()
         this.recycleWallsAndBG()
+        this.lavaCheck()
     }
 
     // contains all while down player controls
     controlPlayer() {
-        // check if the player is alive
-        if (this.playerAlive)
+        // check if the player is alive and not attacking
+        if (this.playerAlive && !this.playerAttacking)
         {
             // prevent moving when both left and right are down
             if (this.key.RIGHT.isDown === this.key.LEFT.isDown) {
                 this.player.setVelocityX(0)
             }
 
+            // to prevent a phaser bug with the player jumping off walls, check if the player 
+            // is against the game bounds before seting velocity. this isn't necessary for
+            // platforms as the bug dosen't happen with them
+
             // move right
             else if (this.key.RIGHT.isDown) {
-                this.player.setVelocityX(this.playerMovementSpeed)
-                this.playerFacingLeft = false;
+                if (this.player.x + this.player.width / 2 < this.gameBoundsX.max) {
+                    this.player.setVelocityX(this.playerMovementSpeed)
+                    this.playerFacingLeft = false;
+                }
             }
 
             // move left
             else if (this.key.LEFT.isDown) {
-                this.player.setVelocityX(-this.playerMovementSpeed)
-                this.playerFacingLeft = true;
+                if (this.player.x - this.player.width / 2 > this.gameBoundsX.min) {
+                    this.player.setVelocityX(-this.playerMovementSpeed)
+                    this.playerFacingLeft = true;
+                }
             } 
 
             // no left right input
             else {
                 this.player.setVelocityX(0)
             }
-
-            // KILL YOURSELF *thunder*
-            if (this.key.X.isDown) {
-                this.playerDie()
-            } 
         }
     }
 
     updatePlayerAnim() {
-        if (this.playerAlive)
+        if (this.playerAlive && !this.playerAttacking)
         {
             // set player face based on bool
             this.player.setFlipX(this.playerFacingLeft)
@@ -257,24 +371,54 @@ class PlayScene extends BaseScene {
         })
     }
 
-    playerDie(lavaDeath = false) {
-        // set player dead
-        this.playerAlive = false
+    playerDie() {
+        // check if the player is already dead
+        if (this.playerAlive) {
+            // remove listeners for key inputs
+            this.key.UP.off('down')
+            this.key.DOWN.off('down')
+            this.key.Z.off('down')
+            this.key.X.off('down')
 
-        // set x velocity to 0
-        this.player.setVelocityX(0)
+            // set player dead
+            this.playerAlive = false
 
-        // remove listeners for key inputs
-        this.key.UP.off('down')
-        this.key.DOWN.off('down')
-        this.key.Z.off('down')
+            // set x velocity to 0
+            this.player.setVelocityX(0)
 
-        // play death animation
-        if (lavaDeath) {
-            this.player.play('p_lavaDeath', true)
-        } else {
+            // play death animation
             this.player.play('p_death', true)
         }
+    }
+
+    hitLava() {
+        this.player.setGravityY(0)
+        this.player.setVelocityY(0)
+        this.player.body.setEnable(false)
+        this.spawnFire(this.player.x, this.player.y)
+        this.playerDie()
+    }
+
+    spawnFire(x, y) {
+        // spawn a fire instance
+        this.fireEffects.create(x, y, 'fire')
+            .setOrigin(0.5, 1)
+            .play('fire', true)
+    }
+
+    lavaCheck() {
+        // check if the lava has reached the top of the screen
+        if (this.lavaFiller.y <= this.cameras.main.midPoint.y - this.config.height / 2) {
+            this.lava.setVelocityY(0)
+            this.lavaMove = false
+        }
+
+        // remove all platforms that are under the lava
+        this.platforms.getChildren().forEach(plat => {
+            if (plat.y > this.lavaFiller.y) {
+                plat.destroy()
+            }
+        })
     }
 }
 
