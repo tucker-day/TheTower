@@ -2,17 +2,16 @@ import BaseScene from "./baseScene"
 
 class PlayScene extends BaseScene {
     constructor(sharedConfig) {
-        const gameWidth = 400
-        const gameHeight = 400
+        const gameSize = 400
 
         const config = {
             key: 'Play',
 
-            width: gameWidth,
-            height: gameHeight,
+            width: gameSize,
+            height: gameSize,
             
             cameras: {
-                zoom: sharedConfig.width / gameWidth
+                zoom: sharedConfig.width / gameSize
             }
         }
         super(config)
@@ -22,12 +21,15 @@ class PlayScene extends BaseScene {
 
         // player
         this.player = null
+
         this.playerCanFly = false
-        this.playerFacingLeft = false
         this.cameraPlayerYOffset = 40
         this.playerGravity = 750
         this.playerMovementSpeed = 200
         this.playerJumpPower = 450 
+
+        this.playerFacingLeft = false
+        this.playerAlive = true
 
         // platforms
         this.platforms = null
@@ -136,6 +138,24 @@ class PlayScene extends BaseScene {
     createControls() {
         // create a bunch of keys
         this.key = this.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,Z,X');
+
+        // create on press events
+        this.key.UP.on('down', this.playerJump, this)
+        this.key.Z.on('down', this.playerJump, this)
+
+        this.key.DOWN.on('down', this.playerQuickDecend, this)
+    }
+
+    playerJump() {
+        if (this.player.body.touching.down || this.playerCanFly) {
+            this.player.setVelocityY(-this.playerJumpPower);
+        }
+    }
+
+    playerQuickDecend() {
+        if (this.playerJumpPower > this.player.body.velocity.y) {
+            this.player.setVelocityY(this.playerJumpPower);
+        }
     }
 
     update() {
@@ -144,77 +164,67 @@ class PlayScene extends BaseScene {
         this.recycleWallsAndBG()
     }
 
+    // contains all while down player controls
     controlPlayer() {
-        // CONTROL SCHEME
-        // Left and Right Arrows for Movement
-        // Up OR Z to jump
-        // Down to quick desend
-        
-        // jump
-        if ((this.key.Z.isDown || this.key.UP.isDown) && (this.player.body.touching.down || this.playerCanFly)) {
-            this.player.setVelocityY(-this.playerJumpPower);
-        }
+        // check if the player is alive
+        if (this.playerAlive)
+        {
+            // prevent moving when both left and right are down
+            if (this.key.RIGHT.isDown === this.key.LEFT.isDown) {
+                this.player.setVelocityX(0)
+            }
 
-        // quick desend
-        else if (this.key.DOWN.isDown && this.playerJumpPower > this.player.body.velocity.y) {
-            this.player.setVelocityY(this.playerJumpPower);
-        }
+            // move right
+            else if (this.key.RIGHT.isDown) {
+                this.player.setVelocityX(this.playerMovementSpeed)
+                this.playerFacingLeft = false;
+            }
 
-        // prevent moving when both left and right are down
-        else if (this.key.RIGHT.isDown === this.key.LEFT.isDown) {
-            this.player.setVelocityX(0)
-        }
+            // move left
+            else if (this.key.LEFT.isDown) {
+                this.player.setVelocityX(-this.playerMovementSpeed)
+                this.playerFacingLeft = true;
+            } 
 
-        // move right
-        else if (this.key.RIGHT.isDown) {
-            this.player.setVelocityX(this.playerMovementSpeed)
-        }
+            // no left right input
+            else {
+                this.player.setVelocityX(0)
+            }
 
-        // move left
-        else if (this.key.LEFT.isDown) {
-            this.player.setVelocityX(-this.playerMovementSpeed)
-        } 
-
-        // no left right input
-        else {
-            this.player.setVelocityX(0)
+            // KILL YOURSELF *thunder*
+            if (this.key.X.isDown) {
+                this.playerDie()
+            } 
         }
     }
 
-    // set sprite flipped based on boolian
     updatePlayerAnim() {
-        // prevent updating when both left and right down
-        if (this.key.RIGHT.isDown != this.key.LEFT.isDown){
-            // update which direction the player is looking
-            if (this.key.RIGHT.isDown) {
-                this.playerFacingLeft = false;
+        if (this.playerAlive)
+        {
+            // set player face based on bool
+            this.player.setFlipX(this.playerFacingLeft)
+
+            let yVel = this.player.body.velocity.y
+            let xVel = this.player.body.velocity.x
+            let onGround = this.player.body.touching.down
+
+            // check player
+            // check if moving on ground with input
+            if (xVel != 0 && onGround && (this.key.RIGHT.isDown || this.key.LEFT.isDown)) {
+                this.player.play('p_walk', true)
             }
-            else if (this.key.LEFT.isDown) {
-                this.playerFacingLeft = true;
+            // jumping
+            else if (yVel < 0 && !onGround) {
+                this.player.play('p_jump', true)
             }
-        }
-
-        this.player.setFlipX(this.playerFacingLeft)
-
-        let yVel = this.player.body.velocity.y
-        let xVel = this.player.body.velocity.x
-        let onGround = this.player.body.touching.down
-
-        // check if moving on ground with input
-        if (xVel != 0 && onGround && (this.key.RIGHT.isDown || this.key.LEFT.isDown)) {
-            this.player.play('p_walk', true)
-        }
-        // jumping
-        else if (yVel < 0 && !onGround) {
-            this.player.play('p_jump', true)
-        }
-        // falling
-        else if (yVel > 0 && !onGround) {
-            this.player.play('p_fall', true)
-        }
-        // else play idle
-        else {
-            this.player.play('p_idle', true)
+            // falling
+            else if (yVel > 0 && !onGround) {
+                this.player.play('p_fall', true)
+            }
+            // else play idle
+            else {
+                this.player.play('p_idle', true)
+            }
         }
     }
 
@@ -245,6 +255,26 @@ class PlayScene extends BaseScene {
                 bg.y -= this.background.getLength() * bg.height
             }
         })
+    }
+
+    playerDie(lavaDeath = false) {
+        // set player dead
+        this.playerAlive = false
+
+        // set x velocity to 0
+        this.player.setVelocityX(0)
+
+        // remove listeners for key inputs
+        this.key.UP.off('down')
+        this.key.DOWN.off('down')
+        this.key.Z.off('down')
+
+        // play death animation
+        if (lavaDeath) {
+            this.player.play('p_lavaDeath', true)
+        } else {
+            this.player.play('p_death', true)
+        }
     }
 }
 

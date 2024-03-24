@@ -8,7 +8,6 @@ class PauseScene extends BaseScene {
             width: sharedConfig.width,
             height: sharedConfig.height
         }
-        
         super(config);
     }
 

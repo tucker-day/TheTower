@@ -7,8 +7,8 @@ class BaseScene extends Phaser.Scene {
         super(config);
 
         this.config = config;
-        
-        this.defaultFont = { fontSize: '12px', fill: '#fff', fontFamily: 'PixelFont' }
+
+        this.defaultFont = { fontSize: '36px', fill: '#fff', fontFamily: 'PixelFont' }
         this.screenCenter = [config.width / 2, config.height / 2]
     }
 

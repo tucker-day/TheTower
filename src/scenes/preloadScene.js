@@ -43,7 +43,7 @@ class PreloadScene extends Phaser.Scene {
         this.anims.create({
             key: 'p_walk',
             frames: this.anims.generateFrameNumbers('knight', { start: 0, end: 9 }),
-            frameRate: 12,
+            frameRate: 14,
             repeat: -1
         })
 
