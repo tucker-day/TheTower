@@ -1,8 +1,15 @@
 import BaseScene from "./baseScene";
 
 class PauseScene extends BaseScene {
-    constructor(config) {
-        super('Pause', config);
+    constructor(sharedConfig) {
+        const config = {
+            key: 'Pause',
+
+            width: sharedConfig.width,
+            height: sharedConfig.height
+        }
+        
+        super(config);
     }
 
     create(){

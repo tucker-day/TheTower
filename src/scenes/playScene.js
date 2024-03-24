@@ -1,8 +1,21 @@
 import BaseScene from "./baseScene"
 
 class PlayScene extends BaseScene {
-    constructor(config) {
-        super('Play', config)
+    constructor(sharedConfig) {
+        const gameWidth = 400
+        const gameHeight = 400
+
+        const config = {
+            key: 'Play',
+
+            width: gameWidth,
+            height: gameHeight,
+            
+            cameras: {
+                zoom: sharedConfig.width / gameWidth
+            }
+        }
+        super(config)
 
         // game background
         this.background = null
@@ -12,9 +25,9 @@ class PlayScene extends BaseScene {
         this.playerCanFly = false
         this.playerFacingLeft = false
         this.cameraPlayerYOffset = 40
-        this.playerGravity = 500
-        this.playerMovementSpeed = 150
-        this.playerJumpPower = 368 
+        this.playerGravity = 750
+        this.playerMovementSpeed = 200
+        this.playerJumpPower = 450 
 
         // platforms
         this.platforms = null
@@ -31,7 +44,11 @@ class PlayScene extends BaseScene {
         this.createWalls()
         this.createControls()
 
+        // make the camera follow the player
         this.cameras.main.startFollow(this.player, false, 0, 1, 0, this.cameraPlayerYOffset)
+
+        // start the game ui
+        this.scene.launch('Ui')
     }
 
     createBG() {

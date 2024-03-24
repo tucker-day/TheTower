@@ -6,36 +6,32 @@ import PlayScene from './scenes/playScene.js'
 import MenuScene from './scenes/menuScene.js'
 import PreloadScene from './scenes/preloadScene.js'
 import PauseScene from './scenes/pauseScene.js'
+import UiScene from './scenes/uiScene.js'
 
 // settings shared by all scenes
 const SHARED_CONFIG = {
-    width: 400,
-    height: 400
+    width: 1000,
+    height: 1000
 }
 
 // list of all game scene objects
-const SCENES = [ PreloadScene, MenuScene, PlayScene, PauseScene ]
+const SCENES = [ PreloadScene, MenuScene, PlayScene, PauseScene, UiScene ]
 
 // make an instance of all game scenes
-const createScene = Scene => new Scene(SHARED_CONFIG)
-const initScenes = () => SCENES.map(createScene)
+const initScenes = () => SCENES.map(Scene => new Scene(SHARED_CONFIG))
 
-const config = {
+const baseGameConfig = {
     // renderer being used
     type: Phaser.AUTO,
 
-    // game screen dimentions
     width: SHARED_CONFIG.width,
     height: SHARED_CONFIG.height,
 
-    // contains settings for scaling the game (does not effect positioning
-    // using width and height)
+    // contains settings for scaling the game
     scale: {
         parent: 'gameContainer', // id of parent for the game canvas
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: SHARED_CONFIG.width,
-        height: SHARED_CONFIG.height,
     },
 
     // physics settings
@@ -52,4 +48,4 @@ const config = {
     scene: initScenes()
 }
 
-new Phaser.Game(config)
+new Phaser.Game(baseGameConfig)

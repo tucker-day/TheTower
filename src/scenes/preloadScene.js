@@ -1,8 +1,14 @@
 import Phaser from "phaser";
 
 class PreloadScene extends Phaser.Scene {
-    constructor() {
-        super('Preload');
+    constructor(sharedConfig) {
+        const config = {
+            key: 'Preload',
+
+            width: sharedConfig.width,
+            height: sharedConfig.height
+        }
+        super(config);
     }
 
     preload(){

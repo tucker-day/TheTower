@@ -1,19 +1,21 @@
 import BaseScene from "./baseScene";
 
-class MenuScene extends BaseScene {
+class UiScene extends BaseScene {
     constructor(sharedConfig) {
         const config = {
-            key: 'Menu',
+            key: 'Ui',
 
             width: sharedConfig.width,
             height: sharedConfig.height
         }
+
         super(config);
     }
 
     create(){
-        this.scene.start('Play')
+        this.add.text(0, 0, 'test good :)', this.defaultFont)
+            .setOrigin(0)
     }
 }
 
-export default MenuScene
+export default UiScene

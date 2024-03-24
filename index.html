@@ -14,9 +14,20 @@
         width: 100%;
         overflow: hidden; /* Removes a small bit of padding at the bottom of the game canvas */
       }
+      /* Imports a local font */
+      @font-face {
+        font-family: PixelFont;
+        src: url('assets/joystix monospace.otf');
+      }
     </style>
   </head>
   <body>
-    <div id = "gameContainer"></div> <!-- When the game starts, its canvas will be created inside this div -->
+
+    <!-- This loads the font added above -->
+    <div style="font-family:PixelFont; position:absolute; left:-1000px; visibility:hidden;">.</div>
+    
+    <!-- When the game starts, its canvas will be created inside this div -->
+    <div id = "gameContainer"></div> 
+
   </body>
 </html>
