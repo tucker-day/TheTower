@@ -1,5 +1,5 @@
+import Player from "../prefabs/player"
 import BaseScene from "./baseScene"
-import EventsCenter from "./eventsCenter"
 
 class PlayScene extends BaseScene {
     constructor(sharedConfig) {
@@ -23,25 +23,6 @@ class PlayScene extends BaseScene {
 
         // player
         this.player = null
-        
-        this.playerCanFly = false
-        this.cameraPlayerYOffset = 40
-        this.playerGravity = 750
-        this.playerMovementSpeed = 200
-        this.playerJumpPower = 450 
-        this.playerCameraFollowFactor = 0.1
-
-        this.playerFacingLeft = false
-        this.playerAlive = true
-        this.playerAttacking = false
-
-        this.playerGold = 0
-        this.playerMaxHealth = 3
-        this.playerHealth = this.playerMaxHealth
-
-        // player attack hitbox
-        this.playerAttackHitbox = null
-        this.playerAttackRange = 60
 
         // platforms
         this.platforms = null
@@ -73,26 +54,28 @@ class PlayScene extends BaseScene {
         // ui config
         this.uiConfig = {
             gameZoom: passConfig.cameras.zoom,
-            maxHealth: this.playerMaxHealth
         }
     }
 
     create() {
         this.createBG()
+        this.player = new Player(...this.screenCenter, this)
+        this.player.createControls()
         this.createPlatforms()
         this.createWalls()
-        this.createPlayer()
         this.createFire()
         this.createLava()
-        this.createControls()
-        this.createUi()
+        this.createUi({
+            gameZoom: this.uiConfig.gameZoom,
+            maxHealth: this.player.maxHealth
+        })
 
         // make the player collide with the enviroment
         this.physics.add.collider(this.player, this.platforms)
         this.physics.add.collider(this.player, this.walls)
 
         // make the camera follow the player
-        this.cameras.main.startFollow(this.player, false, 0, this.playerCameraFollowFactor, 0, this.cameraPlayerYOffset)
+        this.cameras.main.startFollow(this.player, false, 0, this.player.cameraFollowFactor, 0, this.player.cameraYOffset)
     }
 
     createBG() {
@@ -106,46 +89,6 @@ class PlayScene extends BaseScene {
         for (let i = 0; i < this.config.height + height; i += height) {
             this.background.create(this.screenCenter[0], i, 'brickBG')
         }
-    }
-
-    createPlayer() {
-        // create the player object
-        this.player = this.physics.add.sprite(...this.screenCenter, 'knight')
-            .setOrigin(0.5, 1)
-
-        // set inital player facing direction
-        this.player.setFlipX(this.playerFacingLeft)
-
-        // setup player body
-        this.player.setBodySize(this.player.width - 100, this.player.height - 44, false)
-        this.player.body.setOffset(50, 44)
-
-        // assorted other variables to be set
-        this.player.setBounce(0)
-        this.player.body.setGravityY(this.playerGravity)
-
-        // create the player attack hitbox
-        // set scale seems to f everyting up for some reason so these values make no sence but trust me it works lol
-        this.playerAttackHitbox = this.physics.add.image(1000, 0)
-        this.playerAttackHitbox.setSize(this.playerAttackRange, this.player.height - 35)
-        this.playerAttackHitbox.setOrigin(-0.1, 1.2)
-
-        // add on animation end events
-        this.player.on('animationcomplete-p_death', this.gameOver, this)
-        this.player.on('animationcomplete-p_attack', this.playerAttackDone, this)
-
-        this.player.play('p_idle')
-    }
-
-    gameOver() {
-        // dosen't do anything currently. will eventually create a menu
-    }
-
-    playerAttackDone() {
-        // set player attacking to false
-        this.playerAttacking = false
-
-        this.playerAttackHitbox.setPosition(1000, 0)
     }
 
     createWalls() {
@@ -214,7 +157,7 @@ class PlayScene extends BaseScene {
         this.lavaFiller.setScale(this.config.width / this.lavaFiller.width, this.config.height / this.lavaFiller.height)
 
         // make the player die when touching lava
-        this.physics.add.collider(this.player, this.lava, this.hitLava, null, this)
+        this.physics.add.collider(this.player, this.lava, this.player.hitLava, null, this.player)
 
         // change lava render depth
         this.lava.setDepth(this.lavaRenderDepth)
@@ -228,122 +171,15 @@ class PlayScene extends BaseScene {
         this.fireEffects = this.add.group();
     }
 
-    createControls() {
-        // create a bunch of keys
-        this.key = this.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,Z,X');
-
-        // create on press events
-        this.key.UP.on('down', this.playerJump, this)
-        this.key.Z.on('down', this.playerJump, this)
-
-        this.key.DOWN.on('down', this.playerQuickDecend, this)
-        this.key.X.on('down', this.startPlayerAttack, this)
-    }
-
-    playerJump() {
-        if ((this.player.body.touching.down || this.playerCanFly) && !this.playerAttacking) {
-            this.player.setVelocityY(-this.playerJumpPower);
-        }
-    }
-
-    playerQuickDecend() {
-        if (this.playerJumpPower > this.player.body.velocity.y && !this.playerAttacking) {
-            this.player.setVelocityY(this.playerJumpPower);
-        }
-    }
-
-    startPlayerAttack() {
-        // make sure not already attacking
-        if (!this.playerAttacking)
-        {
-            this.playerAttacking = true
-            this.player.play('p_attack', true)
-            this.player.setVelocityX(0)
-            
-            this.playerAttackHitbox.setPosition((this.playerFacingLeft) ? this.player.x - this.playerAttackHitbox.width - 8: this.player.x, this.player.y)
-        }
-
-        this.playerChangeGold(100)
-        this.playerChangeHealth(-1)
-    }
-
-    createUi() {
+    createUi(config) {
          // start the game ui
-         this.scene.launch('Ui', this.uiConfig)
+         this.scene.launch('Ui', config)
     }
 
     update() {
-        this.controlPlayer()
-        this.updatePlayerAnim()
+        this.player.update()
         this.recycleWallsAndBG()
         this.lavaCheck()
-    }
-
-    // contains all while down player controls
-    controlPlayer() {
-        // check if the player is alive and not attacking
-        if (this.playerAlive && !this.playerAttacking)
-        {
-            // prevent moving when both left and right are down
-            if (this.key.RIGHT.isDown === this.key.LEFT.isDown) {
-                this.player.setVelocityX(0)
-            }
-
-            // to prevent a phaser bug with the player jumping off walls, check if the player 
-            // is against the game bounds before seting velocity. this isn't necessary for
-            // platforms as the bug dosen't happen with them
-
-            // move right
-            else if (this.key.RIGHT.isDown) {
-                if (this.player.x + this.player.body.width / 2 < this.gameBoundsX.max) {
-                    this.player.setVelocityX(this.playerMovementSpeed)
-                    this.playerFacingLeft = false;
-                }
-            }
-
-            // move left
-            else if (this.key.LEFT.isDown) {
-                if (this.player.x - this.player.body.width / 2 > this.gameBoundsX.min) {
-                    this.player.setVelocityX(-this.playerMovementSpeed)
-                    this.playerFacingLeft = true;
-                }
-            } 
-
-            // no left right input
-            else {
-                this.player.setVelocityX(0)
-            }
-        }
-    }
-
-    updatePlayerAnim() {
-        if (this.playerAlive && !this.playerAttacking)
-        {
-            // set player face based on bool
-            this.player.setFlipX(this.playerFacingLeft)
-
-            let yVel = this.player.body.velocity.y
-            let xVel = this.player.body.velocity.x
-            let onGround = this.player.body.touching.down
-
-            // check player
-            // check if moving on ground with input
-            if (xVel != 0 && onGround && (this.key.RIGHT.isDown || this.key.LEFT.isDown)) {
-                this.player.play('p_walk', true)
-            }
-            // jumping
-            else if (yVel < 0 && !onGround) {
-                this.player.play('p_jump', true)
-            }
-            // falling
-            else if (yVel > 0 && !onGround) {
-                this.player.play('p_fall', true)
-            }
-            // else play idle
-            else {
-                this.player.play('p_idle', true)
-            }
-        }
     }
 
     // moves walls that are out of the screen
@@ -375,34 +211,6 @@ class PlayScene extends BaseScene {
         })
     }
 
-    playerDie() {
-        // check if the player is already dead
-        if (this.playerAlive) {
-            // remove listeners for key inputs
-            this.key.UP.off('down')
-            this.key.DOWN.off('down')
-            this.key.Z.off('down')
-            this.key.X.off('down')
-
-            // set player dead
-            this.playerAlive = false
-
-            // set x velocity to 0
-            this.player.setVelocityX(0)
-
-            // play death animation
-            this.player.play('p_death', true)
-        }
-    }
-
-    hitLava() {
-        this.player.setGravityY(0)
-        this.player.setVelocityY(0)
-        this.player.body.setEnable(false)
-        this.spawnFire(this.player.x, this.player.y)
-        this.playerChangeHealth(-1000)
-    }
-
     spawnFire(x, y) {
         // spawn a fire instance
         this.fireEffects.create(x, y, 'fire')
@@ -423,31 +231,6 @@ class PlayScene extends BaseScene {
                 plat.destroy()
             }
         })
-    }
-
-    playerChangeGold(change) {
-        if (this.playerGold + change > 0) {
-            this.playerGold += change
-            EventsCenter.emit('update-gold', this.playerGold)
-            return true
-        } 
-        else {
-            return false
-        }
-    }
-
-    playerChangeHealth(change) {
-        this.playerHealth += change
-
-        if (this.playerHealth > this.playerMaxHealth) {
-            this.playerHealth = this.playerMaxHealth
-        }
-        else if (this.playerHealth <= 0) {
-            this.playerHealth = 0
-            this.playerDie()
-        }
-
-        EventsCenter.emit('update-hearts', this.playerHealth)
     }
 }
 

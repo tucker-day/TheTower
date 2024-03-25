@@ -1,3 +1,4 @@
+import Player from "../prefabs/player";
 import BaseScene from "./baseScene";
 import EventsCenter from "./eventsCenter";
 
@@ -22,6 +23,7 @@ class UiScene extends BaseScene {
 
         // group for hearts
         this.hearts = null
+        this.heartsPerRow = 10
 
         // gold icon and text
         this.goldIcon = null
@@ -61,12 +63,14 @@ class UiScene extends BaseScene {
         // create the correct amount of hearts
         this.hearts = this.add.group()
 
-        // get the width of the texture and multiply by game zoom
+        // get the width and height of the texture and multiply by game zoom
         let width = this.textures.get('hearts').get(0).width * this.uiConfig.gameZoom
+        let height = this.textures.get('hearts').get(0).height * this.uiConfig.gameZoom
         
         // create all the hearts and scale it up to the correct size
         for (let i = 0; i < this.uiConfig.maxHealth; i++) {
-            this.hearts.create(this.cornerOffsetX + i * width, this.cornerOffsetY, 'hearts', 0)
+            let row = Math.floor(i / this.heartsPerRow)
+            this.hearts.create(this.cornerOffsetX + (i - this.heartsPerRow * row) * width, this.cornerOffsetY + row * height, 'hearts', 0)
                 .setOrigin(0, 0)
                 .setScale(this.uiConfig.gameZoom)
         }
