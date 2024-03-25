@@ -15,9 +15,10 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('wall', 'assets/wall.png')
         this.load.image('brickBG', 'assets/brickBG.png')
         this.load.image('platform', 'assets/platform.jpg')
+        this.load.image('goldPile', 'assets/coins.png')
 
         this.load.spritesheet('knight', 'assets/knightSheet.png', {
-            frameWidth: 120, frameHeight: 80
+            frameWidth: 120, frameHeight: 80,
         })
 
         this.load.spritesheet('fire', 'assets/fire.png', {
@@ -27,6 +28,10 @@ class PreloadScene extends Phaser.Scene {
         this.load.spritesheet('lava', 'assets/lava.png', {
             frameWidth: 48, frameHeight: 48
         })
+
+        this.load.spritesheet('hearts', 'assets/hearts.png' , {
+            frameWidth: 16, frameHeight: 16
+        })
     }
 
     create(){
@@ -35,7 +40,6 @@ class PreloadScene extends Phaser.Scene {
         this.createLavaAnim()
 
         this.scene.start('Menu')
-
     }
 
     // loads all animations for the player knight character
@@ -94,7 +98,7 @@ class PreloadScene extends Phaser.Scene {
         this.anims.create({
             key: 'p_death',
             frames: this.anims.generateFrameNumbers('knight', { start: 32, end: 41 }),
-            frameRate: 12,
+            frameRate: 8,
             repeat: 0
         })
 

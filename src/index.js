@@ -42,6 +42,12 @@ const baseGameConfig = {
         }
     },
 
+    // limit game fps (fixes some visual issues when moving the camera)
+    fps: {
+        target: 60,
+        forceSetTimeOut: true
+      },
+
     pixelArt: true, // unblurs pixel art
 
     // creates the scenes in phaser

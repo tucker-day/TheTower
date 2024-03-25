@@ -1,4 +1,5 @@
 import BaseScene from "./baseScene"
+import EventsCenter from "./eventsCenter"
 
 class PlayScene extends BaseScene {
     constructor(sharedConfig) {
@@ -15,6 +16,7 @@ class PlayScene extends BaseScene {
             }
         }
         super(passConfig)
+        this.sharedConfig = sharedConfig
 
         // game background
         this.background = null
@@ -27,14 +29,18 @@ class PlayScene extends BaseScene {
         this.playerGravity = 750
         this.playerMovementSpeed = 200
         this.playerJumpPower = 450 
+        this.playerCameraFollowFactor = 0.1
 
         this.playerFacingLeft = false
         this.playerAlive = true
         this.playerAttacking = false
 
+        this.playerGold = 0
+        this.playerMaxHealth = 3
+        this.playerHealth = this.playerMaxHealth
+
         // player attack hitbox
         this.playerAttackHitbox = null
-
         this.playerAttackRange = 60
 
         // platforms
@@ -43,7 +49,6 @@ class PlayScene extends BaseScene {
 
         // walls
         this.walls = null
-
         this.wallsRenderDepth = 11
 
         // lava
@@ -51,7 +56,7 @@ class PlayScene extends BaseScene {
         this.lavaFiller = null
 
         this.lavaInitY = 300
-        this.lavaInitSpeed = -10
+        this.lavaInitSpeed = -20
         this.lavaRenderDepth = 10
 
         this.lavaMove = true
@@ -64,6 +69,12 @@ class PlayScene extends BaseScene {
             min: 16,
             max: this.config.width -  16
         }
+
+        // ui config
+        this.uiConfig = {
+            gameZoom: passConfig.cameras.zoom,
+            maxHealth: this.playerMaxHealth
+        }
     }
 
     create() {
@@ -74,16 +85,14 @@ class PlayScene extends BaseScene {
         this.createFire()
         this.createLava()
         this.createControls()
+        this.createUi()
 
         // make the player collide with the enviroment
         this.physics.add.collider(this.player, this.platforms)
         this.physics.add.collider(this.player, this.walls)
 
         // make the camera follow the player
-        this.cameras.main.startFollow(this.player, false, 0, 1, 0, this.cameraPlayerYOffset)
-
-        // start the game ui
-        this.scene.launch('Ui')
+        this.cameras.main.startFollow(this.player, false, 0, this.playerCameraFollowFactor, 0, this.cameraPlayerYOffset)
     }
 
     createBG() {
@@ -198,8 +207,6 @@ class PlayScene extends BaseScene {
         instance.setBodySize(instance.width, instance.height * 0.6)
         instance.setOffset(0, instance.height * 0.4)
 
-        debugger
-
         // create the lava objects
         while (this.lava.getLast(true).x + this.lava.getLast(true).width < this.config.width) {
             let instance = this.lava.create(this.lava.getLast(true).x + this.lava.getLast(true).width, this.lavaInitY, 'lava')
@@ -266,6 +273,14 @@ class PlayScene extends BaseScene {
             
             this.playerAttackHitbox.setPosition((this.playerFacingLeft) ? this.player.x - this.playerAttackHitbox.width - 8: this.player.x, this.player.y)
         }
+
+        this.playerChangeGold(100)
+        this.playerChangeHealth(-1)
+    }
+
+    createUi() {
+         // start the game ui
+         this.scene.launch('Ui', this.uiConfig)
     }
 
     update() {
@@ -291,7 +306,7 @@ class PlayScene extends BaseScene {
 
             // move right
             else if (this.key.RIGHT.isDown) {
-                if (this.player.x + this.player.width / 2 < this.gameBoundsX.max) {
+                if (this.player.x - this.player.width / 2 < this.gameBoundsX.max) {
                     this.player.setVelocityX(this.playerMovementSpeed)
                     this.playerFacingLeft = false;
                 }
@@ -299,7 +314,7 @@ class PlayScene extends BaseScene {
 
             // move left
             else if (this.key.LEFT.isDown) {
-                if (this.player.x - this.player.width / 2 > this.gameBoundsX.min) {
+                if (this.player.x + this.player.width / 2 > this.gameBoundsX.min) {
                     this.player.setVelocityX(-this.playerMovementSpeed)
                     this.playerFacingLeft = true;
                 }
@@ -396,7 +411,7 @@ class PlayScene extends BaseScene {
         this.player.setVelocityY(0)
         this.player.body.setEnable(false)
         this.spawnFire(this.player.x, this.player.y)
-        this.playerDie()
+        this.playerChangeHealth(-1000)
     }
 
     spawnFire(x, y) {
@@ -419,6 +434,31 @@ class PlayScene extends BaseScene {
                 plat.destroy()
             }
         })
+    }
+
+    playerChangeGold(change) {
+        if (this.playerGold + change > 0) {
+            this.playerGold += change
+            EventsCenter.emit('update-gold', this.playerGold)
+            return true
+        } 
+        else {
+            return false
+        }
+    }
+
+    playerChangeHealth(change) {
+        this.playerHealth += change
+
+        if (this.playerHealth > this.playerMaxHealth) {
+            this.playerHealth = this.playerMaxHealth
+        }
+        else if (this.playerHealth <= 0) {
+            this.playerHealth = 0
+            this.playerDie()
+        }
+
+        EventsCenter.emit('update-hearts', this.playerHealth)
     }
 }
 
