@@ -99,13 +99,13 @@ class PlayScene extends BaseScene {
         // create a group of background sprites
         this.background = this.add.group()
 
-        // create the first
-        this.background.create(this.screenCenter[0], 0, 'brickBG')
+        // get background sprite height
+        let height = this.textures.get('brickBG').get(0).height
 
-        // fill group until screen is filled
-        do {
-            this.background.create(this.background.getLast(true).x, this.background.getLast(true).y + this.background.getLast(true).height, 'brickBG')
-        } while (this.background.getLast(true).y < this.cameras.main.y + this.config.height)
+        // create all background panels
+        for (let i = 0; i < this.config.height + height; i += height) {
+            this.background.create(this.screenCenter[0], i, 'brickBG')
+        }
     }
 
     createPlayer() {
@@ -117,7 +117,7 @@ class PlayScene extends BaseScene {
         this.player.setFlipX(this.playerFacingLeft)
 
         // setup player body
-        this.player.setBodySize(this.player.width - 101, this.player.height - 44, false)
+        this.player.setBodySize(this.player.width - 100, this.player.height - 44, false)
         this.player.body.setOffset(50, 44)
 
         // assorted other variables to be set
@@ -152,23 +152,14 @@ class PlayScene extends BaseScene {
         // create a group of wall sprites
         this.walls = this.physics.add.group()
 
-        // there is no setImmovable for all in a group so it has to be set everytime
-        // a wall is created
+        // get wall sprite height
+        let height = this.textures.get('wall').get(0).height
 
-        // create the first two walls
-        this.walls.create(0, 0, 'wall')
-            .setImmovable(true)
-
-        this.walls.create(this.config.width, 0, 'wall')
-            .setImmovable(true)
-            .setFlipX(true)
-
-        // fill group until screen is filled
-        while (this.walls.getLast(true).y < this.config.height) {
-            this.walls.create(0, this.walls.getLast(true).y + this.walls.getLast(true).height, 'wall')
+        // create all walls
+        for (let i = 0; i < this.config.height + height; i += height) {
+            this.walls.create(0, i, 'wall')
                 .setImmovable(true)
-        
-            this.walls.create(this.config.width, this.walls.getLast(true).y, 'wall')
+            this.walls.create(this.config.width, i, 'wall')
                 .setImmovable(true)
                 .setFlipX(true)
         }
@@ -189,6 +180,10 @@ class PlayScene extends BaseScene {
             .setImmovable(true)
             .setOrigin(0.5, 0)
 
+        this.platforms.create(this.config.width, this.screenCenter[1] - this.platformYDistance, 'platform')
+            .setImmovable(true)
+            .setOrigin(0.5, 0)
+
         this.platforms.create(this.screenCenter[0], this.screenCenter[1] - 2 * this.platformYDistance, 'platform')
             .setImmovable(true)
             .setOrigin(0.5, 0)
@@ -198,18 +193,12 @@ class PlayScene extends BaseScene {
         // create a group for lava objects
         this.lava = this.physics.add.group();
 
-        // create the first lava object
-        let instance = this.lava.create(0, this.lavaInitY, 'lava')
-            .setImmovable(true)
-            .setOrigin(0, 0)
-            .play('lava')
+        // get the width of the lava sprite
+        let width = this.textures.get('lava').get(0).width
 
-        instance.setBodySize(instance.width, instance.height * 0.6)
-        instance.setOffset(0, instance.height * 0.4)
-
-        // create the lava objects
-        while (this.lava.getLast(true).x + this.lava.getLast(true).width < this.config.width) {
-            let instance = this.lava.create(this.lava.getLast(true).x + this.lava.getLast(true).width, this.lavaInitY, 'lava')
+        // create all lava objects
+        for (let i = 0; i < this.config.width + width; i += width) {
+            let instance = this.lava.create(i, this.lavaInitY, 'lava')
                 .setImmovable(true)
                 .setOrigin(0, 0)
                 .play('lava')
@@ -306,7 +295,7 @@ class PlayScene extends BaseScene {
 
             // move right
             else if (this.key.RIGHT.isDown) {
-                if (this.player.x - this.player.width / 2 < this.gameBoundsX.max) {
+                if (this.player.x + this.player.body.width / 2 < this.gameBoundsX.max) {
                     this.player.setVelocityX(this.playerMovementSpeed)
                     this.playerFacingLeft = false;
                 }
@@ -314,7 +303,7 @@ class PlayScene extends BaseScene {
 
             // move left
             else if (this.key.LEFT.isDown) {
-                if (this.player.x + this.player.width / 2 > this.gameBoundsX.min) {
+                if (this.player.x - this.player.body.width / 2 > this.gameBoundsX.min) {
                     this.player.setVelocityX(-this.playerMovementSpeed)
                     this.playerFacingLeft = true;
                 }
