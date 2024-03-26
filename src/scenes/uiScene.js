@@ -15,7 +15,8 @@ class UiScene extends BaseScene {
         // array of all events
         this.eventRef = [
             {name: 'update-gold', method: this.updateGold},
-            {name: 'update-hearts', method: this.updateHearts}
+            {name: 'update-hearts', method: this.updateHearts},
+            {name: 'update-lavaDistance', method: this.updateLavaDistance}
         ]
 
         // ui config from init
@@ -33,6 +34,8 @@ class UiScene extends BaseScene {
         this.cornerOffsetY = 32
         this.cornerOffsetX = 32
         this.goldTextOffsetX = 10
+
+        this.lavaShowDistance = 250
     }
 
     init(uiConfig) {
@@ -43,6 +46,7 @@ class UiScene extends BaseScene {
     create(){
         this.createEvents()
         this.createHearts()
+        this.createLavaDistance()
     }
 
     createEvents() {
@@ -86,13 +90,30 @@ class UiScene extends BaseScene {
             .setOrigin(1, 0)
     }
 
+    createLavaDistance() {
+        this.lavaText = this.add.text(this.config.width / 2, this.config.height - 100, '0', 
+            { fontSize: this.goldIcon.height * this.uiConfig.gameZoom, fill: '#fff', fontFamily: 'SilverFont' })
+            .setOrigin(0.5, 0)
+            .setVisible(false)
+    }
+
     updateGold(gold) {
 		this.goldText.text = `${gold}`
 	}
 
     updateHearts(health) {
         for (let i = 0; i < this.uiConfig.maxHealth; i++) {
-            let test = this.hearts.getChildren()[i].setFrame((i < health) ? 0 : 4)
+            this.hearts.getChildren()[i].setFrame((i < health) ? 0 : 4)
+        }
+    }
+
+    updateLavaDistance(distance) {
+        distance = Math.floor(distance)
+        if (distance > this.lavaShowDistance) {
+            this.lavaText.setVisible(true)
+            this.lavaText.text = `${distance}`
+        } else {
+            this.lavaText.setVisible(false)
         }
     }
 }

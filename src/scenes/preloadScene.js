@@ -16,6 +16,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('brickBG', 'assets/brickBG.png')
         this.load.image('platform', 'assets/platform.jpg')
         this.load.image('goldPile', 'assets/coins.png')
+        this.load.image('gradient', 'assets/gradient.png')
 
         this.load.spritesheet('knight', 'assets/knightSheet.png', {
             frameWidth: 120, frameHeight: 80,

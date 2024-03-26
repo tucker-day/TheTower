@@ -13,7 +13,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.physics.add.existing(this)
 
         // player config
-        this.canFly = true
+        this.canFly = false
         this.gravity = 750
         this.movementSpeed = 200
         this.jumpPower = 450

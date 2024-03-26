@@ -8,7 +8,7 @@ class FlyingEye extends Enemy {
         this.attack = 1
         this.gold = 5
 
-        this.movement = 30
+        this.movement = 40
 
         // adjust body width on death to prevent make it look better
         this.deathBodyWidth = 10

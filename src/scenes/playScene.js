@@ -1,6 +1,7 @@
 import FlyingEye from "../prefabs/flyingEye"
 import Player from "../prefabs/player"
 import BaseScene from "./baseScene"
+import EventsCenter from "../scenes/eventsCenter";
 
 class PlayScene extends BaseScene {
     constructor(sharedConfig) {
@@ -26,6 +27,7 @@ class PlayScene extends BaseScene {
         this.walls = null
         this.lava = null
         this.lavaFiller = null
+        this.lavaGradient = null
         this.fireEffects = null
         this.enemies = null
         this.enemiesHitboxes = null
@@ -34,7 +36,7 @@ class PlayScene extends BaseScene {
         this.platformYDistance = 112
         this.wallsRenderDepth = 11
         this.lavaInitY = 300
-        this.lavaSpeed = -60
+        this.lavaSpeed = -50
         this.lavaRenderDepth = 10
         this.layerGapSize = 100
 
@@ -78,9 +80,13 @@ class PlayScene extends BaseScene {
         this.initSpawnLayers()
 
         this.timedEvent = this.time.addEvent({
-            delay: 5000,
+            delay: 1000,
             callback: () => {
-                this.lavaSpeed--
+                debugger
+                if (this.player.alive) {
+                    this.lavaSpeed--
+                    this.player.changeGold(1)
+                }
             },
             callbackScope: this,
             loop: true
@@ -93,6 +99,7 @@ class PlayScene extends BaseScene {
         this.checkLayers()
         this.lavaCheck()
         this.enemies.getChildren().forEach(enemy => { enemy.update() })
+        this.updateUiLavaDistance()
     }
 
     createBG() {
@@ -195,7 +202,12 @@ class PlayScene extends BaseScene {
         this.lavaFiller = this.lava.create(0, this.lava.getLast(true).y + this.lava.getLast(true).height, 'lava')
             .setImmovable(true)
             .setOrigin(0, 0)
-        this.lavaFiller.setScale(this.config.width / this.lavaFiller.width, this.config.height / this.lavaFiller.height)
+        this.lavaFiller.setScale(this.config.width / this.lavaFiller.width, this.config.height / this.lavaFiller.height + 5)
+
+        // add the gradient but make it body tiny so it dosent hit the player
+        this.lavaGradient = this.lava.create(this.lavaFiller.x, this.lavaFiller.y, 'gradient')
+            .setOrigin(0, 1)
+            .setBodySize(1, 1, false)
 
         // make the player die when touching lava
         this.physics.add.overlap(this.player, this.lava, this.player.hitLava, null, this.player)
@@ -324,6 +336,10 @@ class PlayScene extends BaseScene {
         if (this.getHighestLayer() > camTop) {
             this.spawnLayer(this.getHighestLayer() - this.platformYDistance)
         }
+    }
+
+    updateUiLavaDistance() {
+        EventsCenter.emit('update-lavaDistance', this.lavaFiller.y - this.player.y)
     }
 }
 
