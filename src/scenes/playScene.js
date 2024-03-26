@@ -1,3 +1,4 @@
+import Enemy from "../prefabs/enemy"
 import Player from "../prefabs/player"
 import BaseScene from "./baseScene"
 
@@ -18,32 +19,22 @@ class PlayScene extends BaseScene {
         super(passConfig)
         this.sharedConfig = sharedConfig
 
-        // game background
+        // object storage
         this.background = null
-
-        // player
         this.player = null
-
-        // platforms
         this.platforms = null
-        this.platformYDistance = 112
-
-        // walls
         this.walls = null
-        this.wallsRenderDepth = 11
-
-        // lava
         this.lava = null
         this.lavaFiller = null
-
-        this.lavaInitY = 300
-        this.lavaInitSpeed = -20
-        this.lavaRenderDepth = 10
-
-        this.lavaMove = true
-
-        // fire effects
         this.fireEffects = null
+        this.enemies = null
+        
+        // settings
+        this.platformYDistance = 112
+        this.wallsRenderDepth = 11
+        this.lavaInitY = 300
+        this.lavaInitSpeed = 0
+        this.lavaRenderDepth = 10
 
         // game boundries
         this.gameBoundsX = {
@@ -60,15 +51,17 @@ class PlayScene extends BaseScene {
     create() {
         this.createBG()
         this.player = new Player(...this.screenCenter, this)
-        this.player.createControls()
         this.createPlatforms()
         this.createWalls()
         this.createFire()
         this.createLava()
+        this.createEnemyGroup()
         this.createUi({
             gameZoom: this.uiConfig.gameZoom,
             maxHealth: this.player.maxHealth
         })
+
+        this.enemies.add(new Enemy(150, 150, null, this))
 
         // make the player collide with the enviroment
         this.physics.add.collider(this.player, this.platforms)
@@ -169,6 +162,25 @@ class PlayScene extends BaseScene {
     createFire() {
         // create a group of fire
         this.fireEffects = this.add.group();
+    }
+
+    createEnemyGroup() {
+        // create a group for the enemies
+        this.enemies = this.physics.add.group()
+
+        // add a collider for the enemy getting hit
+        this.physics.add.collider(this.player.attackHitbox, this.enemies, (player, enemy) => {
+            enemy.gotHit(1)
+        }, null, this)
+
+        // add a collider for the player getting hit
+        this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
+            player.gotHit(-1)
+        }, null, this)
+    }
+
+    enemyHit(player, enemy) {
+        enemy.damaged(1)
     }
 
     createUi(config) {

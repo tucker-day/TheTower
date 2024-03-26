@@ -5,11 +5,19 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(x, y, scene) {
         super(scene, x, y, 'knight')
         
+        // save a refrence to the parent scene
+        this.scene = scene
+
+        // add this object to the parent scene
+        this.scene.add.existing(this)
+        this.scene.physics.add.existing(this)
+
         // player config
         this.canFly = false
         this.gravity = 750
         this.movementSpeed = 200
         this.jumpPower = 450
+        this.hitIFrameDuration = 1000
         
         // camera config
         this.cameraYOffset = 40
@@ -18,24 +26,21 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         // runtime variables
         this.facingLeft = false
         this.alive = true
+        this.stunned = false
         this.attacking = false
+        this.immortal = false
 
         this.gold = 0
-        this.maxHealth = 20
+        this.maxHealth = 5
         this.health = this.maxHealth
 
         // attack hitbox
         this.attackHitbox = null
-        this.attackRange = 60
-        
-        // save a refrence to the parent scene
-        this.scene = scene
-
-        // add thiss object to the parent scene
-        this.scene.add.existing(this)
-        this.scene.physics.add.existing(this)
+        this.attackRange = 50
+        this.attackHeight = 45
 
         this.create()
+        this.createControls()
     }
 
     create() {
@@ -51,14 +56,17 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setGravityY(this.gravity)
 
         // create the player attack hitbox
-        // set scale seems to f everyting up for some reason so these values make no sence but trust me it works lol
-        this.attackHitbox = this.scene.physics.add.image(1000, 0)
-        this.attackHitbox.setSize(this.attackRange, this.height - 35)
-        this.attackHitbox.setOrigin(-0.1, 1.2)
+        this.attackHitbox = this.scene.add.rectangle(1000, 0, this.attackRange, this.attackHeight)
+            .setVisible(false)
+            .setOrigin(0, 1)
+        
+        // make the hitbox a physics object
+        this.scene.physics.add.existing(this.attackHitbox)
 
         // create on animation end events
         this.on('animationcomplete-p_death', this.gameOver, this)
         this.on('animationcomplete-p_attack', this.attackDone, this)
+        this.on('animationcomplete-p_hit', this.endHit, this)
 
         this.play('p_idle')
     }
@@ -74,6 +82,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.attackHitbox.setPosition(1000, 0)
     }
 
+    endHit() {
+        this.stunned = false;
+        this.checkDead()
+    }
+
     createControls() {
         // create a bunch of keys
         this.scene.key = this.scene.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,Z,X');
@@ -87,36 +100,32 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     jump() {
-        if ((this.body.touching.down || this.canFly) && !this.attacking) {
+        if ((this.body.touching.down || this.canFly) && !this.attacking && !this.stunned) {
             this.setVelocityY(-this.jumpPower);
         }
     }
 
     quickDecend() {
-        if (this.jumpPower > this.body.velocity.y && !this.attacking) {
+        if (this.jumpPower > this.body.velocity.y && (!this.attacking || !this.stunned)) {
             this.setVelocityY(this.jumpPower);
         }
     }
 
     startAttack() {
-        // make sure not already attacking
-        if (!this.attacking)
+        // make sure not already attacking or stunned
+        if (!this.attacking && !this.stunned)
         {
             this.attacking = true
             this.play('p_attack', true)
             this.setVelocityX(0)
-            
-            this.attackHitbox.setPosition((this.facingLeft) ? this.x - this.attackHitbox.width - 8: this.x, this.y)
+            this.attackHitbox.setPosition((this.facingLeft) ? this.x - this.attackHitbox.width: this.x, this.y)
         }
-
-        this.changeGold(100)
-        this.changeHealth(-1)
     }
 
     // contains all while down player controls
     control() {
-        // check if the player is alive and not attacking
-        if (this.alive && !this.attacking)
+        // check if the player is alive, not attacking and not stunned
+        if (this.alive && !this.attacking && !this.stunned)
         {
             // prevent moving when both left and right are down
             if (this.scene.key.RIGHT.isDown === this.scene.key.LEFT.isDown) {
@@ -151,7 +160,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     updateAnim() {
-        if (this.alive && !this.attacking)
+        if (this.alive && !this.attacking && !this.stunned)
         {
             // set player face based on bool
             this.setFlipX(this.facingLeft)
@@ -206,6 +215,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setEnable(false)
         this.scene.spawnFire(this.x, this.y)
         this.changeHealth(-this.maxHealth)
+        this.die()
     }
 
     changeGold(change) {
@@ -227,8 +237,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         }
         else if (this.health <= 0) {
             this.health = 0
-            this.die()
         }
+
+        debugger
 
         EventsCenter.emit('update-hearts', this.health)
     }
@@ -236,6 +247,38 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     update() {
         this.control()
         this.updateAnim()
+    }
+
+    gotHit(damage) {
+        if (!this.immortal && this.alive) {
+            this.setVelocityX(0)
+            this.changeHealth(damage)
+            this.play('p_hit')
+            this.stunned = true
+            this.getIFrames()
+            // check death is ran once 'p_hit' is complete
+        }
+    }
+
+    getIFrames() {
+        this.immortal = true
+        this.scene.timedEvent = this.scene.time.addEvent({
+            delay: this.hitIFrameDuration,
+            callback: this.endIFrames,
+            callbackScope: this,
+            loop: false
+        })
+    }
+
+    endIFrames() {
+        this.immortal = false
+        this.scene.timedEvent.remove()
+    }
+
+    checkDead() {
+        if (this.health <= 0) {
+            this.die()
+        }
     }
 }
 

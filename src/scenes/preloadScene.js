@@ -22,15 +22,19 @@ class PreloadScene extends Phaser.Scene {
         })
 
         this.load.spritesheet('fire', 'assets/fire.png', {
-            frameWidth: 96, frameHeight: 96
+            frameWidth: 96
         })
 
         this.load.spritesheet('lava', 'assets/lava.png', {
-            frameWidth: 48, frameHeight: 48
+            frameWidth: 48
         })
 
         this.load.spritesheet('hearts', 'assets/hearts.png' , {
-            frameWidth: 16, frameHeight: 16
+            frameWidth: 16
+        })
+
+        this.load.spritesheet('flyingEye', 'assets/flyingEye.png', {
+            frameWidth: 60, frameHeight: 50
         })
     }
 
@@ -38,22 +42,13 @@ class PreloadScene extends Phaser.Scene {
         this.createPlayerAnims()
         this.createFireAnim()
         this.createLavaAnim()
+        this.createEnemyAnims()
 
         this.scene.start('Menu')
     }
 
     // loads all animations for the player knight character
     createPlayerAnims() {
-
-        // KNIGHT SPRITESHEET GUIDE
-        // Walk         1 - 10
-        // Idle         11 - 20
-        // Attack       21 - 24
-        // Jump         25 - 27
-        // (NOT USED)   28 - 29
-        // Fall         30 - 32
-        // Death        33 - 42
-
         // player walk
         this.anims.create({
             key: 'p_walk',
@@ -73,8 +68,8 @@ class PreloadScene extends Phaser.Scene {
         // player attack
         this.anims.create({
             key: 'p_attack',
-            frames: this.anims.generateFrameNumbers('knight', { start: 20, end: 23 }),
-            frameRate: 16,
+            frames: this.anims.generateFrameNumbers('knight', { start: 21, end: 23 }),
+            frameRate: 12,
             repeat: false
         })
 
@@ -97,7 +92,15 @@ class PreloadScene extends Phaser.Scene {
         // player death
         this.anims.create({
             key: 'p_death',
-            frames: this.anims.generateFrameNumbers('knight', { start: 32, end: 41 }),
+            frames: this.anims.generateFrameNumbers('knight', { start: 33, end: 41 }),
+            frameRate: 8,
+            repeat: 0
+        })
+
+        // player hit
+        this.anims.create({
+            key: 'p_hit',
+            frames: this.anims.generateFrameNumbers('knight', { start: 42, end: 43 }),
             frameRate: 8,
             repeat: 0
         })
@@ -105,7 +108,7 @@ class PreloadScene extends Phaser.Scene {
         // player test anim loop
         this.anims.create({
             key: 'p_test',
-            frames: this.anims.generateFrameNumbers('knight', { start: 0, end: 41 }),
+            frames: this.anims.generateFrameNumbers('knight', { start: 0, end: 43 }),
             frameRate: 12,
             repeat: -1
         })
@@ -126,6 +129,22 @@ class PreloadScene extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('lava', { start: 1, end: 7 }),
             frameRate: 6,
             repeat: -1
+        })
+    }
+
+    createEnemyAnims() {
+        this.anims.create({
+            key: 'flyEye_fly',
+            frames: this.anims.generateFrameNumbers('flyingEye', { start: 0, end: 7 }),
+            frameRate: 10,
+            repeat: -1
+        })
+
+        this.anims.create({
+            key: 'flyEye_die',
+            frames: this.anims.generateFrameNumbers('flyingEye', { start: 16, end: 19 }),
+            frameRate: 10,
+            repeat: 0
         })
     }
 }
