@@ -92,7 +92,7 @@ class PreloadScene extends Phaser.Scene {
         // player death
         this.anims.create({
             key: 'p_death',
-            frames: this.anims.generateFrameNumbers('knight', { start: 33, end: 41 }),
+            frames: this.anims.generateFrameNumbers('knight', { start: 32, end: 41 }),
             frameRate: 8,
             repeat: 0
         })
@@ -101,7 +101,7 @@ class PreloadScene extends Phaser.Scene {
         this.anims.create({
             key: 'p_hit',
             frames: this.anims.generateFrameNumbers('knight', { start: 42, end: 43 }),
-            frameRate: 8,
+            frameRate: 6,
             repeat: 0
         })
 
@@ -142,8 +142,22 @@ class PreloadScene extends Phaser.Scene {
 
         this.anims.create({
             key: 'flyEye_die',
-            frames: this.anims.generateFrameNumbers('flyingEye', { start: 16, end: 19 }),
-            frameRate: 10,
+            frames: this.anims.generateFrameNumbers('flyingEye', { start: 16, end: 17 }),
+            frameRate: 8,
+            repeat: 0
+        })
+
+        this.anims.create({
+            key: 'flyEye_hit',
+            frames: this.anims.generateFrameNumbers('flyingEye', { start: 21, end: 24 }),
+            frameRate: 8,
+            repeat: 0
+        })
+
+        this.anims.create({
+            key: 'flyEye_dead',
+            frames: this.anims.generateFrameNames('flyingEye', {start: 18, end: 19}),
+            frameRate: 8,
             repeat: 0
         })
     }

@@ -1,4 +1,4 @@
-import Enemy from "../prefabs/enemy"
+import FlyingEye from "../prefabs/flyingEye"
 import Player from "../prefabs/player"
 import BaseScene from "./baseScene"
 
@@ -28,13 +28,15 @@ class PlayScene extends BaseScene {
         this.lavaFiller = null
         this.fireEffects = null
         this.enemies = null
+        this.enemiesHitboxes = null
         
         // settings
         this.platformYDistance = 112
         this.wallsRenderDepth = 11
         this.lavaInitY = 300
-        this.lavaInitSpeed = 0
+        this.lavaSpeed = -60
         this.lavaRenderDepth = 10
+        this.layerGapSize = 100
 
         // game boundries
         this.gameBoundsX = {
@@ -51,24 +53,46 @@ class PlayScene extends BaseScene {
     create() {
         this.createBG()
         this.player = new Player(...this.screenCenter, this)
-        this.createPlatforms()
+        
+        // make the camera follow the player
+        this.cameras.main.startFollow(this.player, false, 0, this.player.cameraFollowFactor, 0, this.player.cameraYOffset)
+        
         this.createWalls()
         this.createFire()
         this.createLava()
+        this.createPlatformsGroup()
         this.createEnemyGroup()
         this.createUi({
             gameZoom: this.uiConfig.gameZoom,
             maxHealth: this.player.maxHealth
         })
 
-        this.enemies.add(new Enemy(150, 150, null, this))
-
         // make the player collide with the enviroment
         this.physics.add.collider(this.player, this.platforms)
         this.physics.add.collider(this.player, this.walls)
 
-        // make the camera follow the player
-        this.cameras.main.startFollow(this.player, false, 0, this.player.cameraFollowFactor, 0, this.player.cameraYOffset)
+        // make enemies collide with the enviroment
+        this.physics.add.collider(this.enemies, this.platforms)
+        this.physics.add.collider(this.enemies, this.walls)
+
+        this.initSpawnLayers()
+
+        this.timedEvent = this.time.addEvent({
+            delay: 5000,
+            callback: () => {
+                this.lavaSpeed--
+            },
+            callbackScope: this,
+            loop: true
+        })
+    }
+
+    update() {
+        this.player.update()
+        this.recycleWallsAndBG()
+        this.checkLayers()
+        this.lavaCheck()
+        this.enemies.getChildren().forEach(enemy => { enemy.update() })
     }
 
     createBG() {
@@ -104,25 +128,49 @@ class PlayScene extends BaseScene {
         this.walls.setDepth(this.wallsRenderDepth)
     }
 
-    createPlatforms() {
+    createPlatformsGroup() {
         // create a group of platforms
         this.platforms = this.physics.add.group();
 
         this.platforms.create(this.screenCenter[0], this.screenCenter[1], 'platform')
             .setImmovable(true)
             .setOrigin(0.5, 0)
+    }
 
-        this.platforms.create(0, this.screenCenter[1] - this.platformYDistance, 'platform')
-            .setImmovable(true)
-            .setOrigin(0.5, 0)
+    spawnLayer(yPos) {
+        // get the gap's position
+        let leftPos = Phaser.Math.Between(this.gameBoundsX.min, this.gameBoundsX.max - this.layerGapSize)
+        let rightPos = leftPos + this.layerGapSize
 
-        this.platforms.create(this.config.width, this.screenCenter[1] - this.platformYDistance, 'platform')
-            .setImmovable(true)
-            .setOrigin(0.5, 0)
+        // get platform width
+        let platWidth = this.textures.get('platform').get(0).width
 
-        this.platforms.create(this.screenCenter[0], this.screenCenter[1] - 2 * this.platformYDistance, 'platform')
-            .setImmovable(true)
-            .setOrigin(0.5, 0)
+        // create the left platforms
+        for (let i = leftPos; i > 0; i -= platWidth) {
+            this.platforms.create(i, yPos, 'platform')
+                .setImmovable(true)
+                .setOrigin(1, 0)
+        }
+
+        // create the right platforms
+        for (let i = rightPos; i < this.config.width; i += platWidth) {
+            this.platforms.create(i, yPos, 'platform')
+                .setImmovable(true)
+                .setOrigin(0, 0)
+        }
+
+        // put an enemy at a random position
+        let enemyPos = Phaser.Math.Between(this.gameBoundsX.min + 25, this.gameBoundsX.max - 25)
+        this.createEnemy(new FlyingEye(enemyPos, yPos, this))
+    }
+
+    initSpawnLayers() {
+        // spawn enough layers to get to the top of the screen
+        let camTop = this.cameras.main.midPoint.y - this.config.height / 2
+
+        while (this.getHighestLayer() > camTop) {
+            this.spawnLayer(this.getHighestLayer() - this.platformYDistance)
+        }
     }
 
     createLava() {
@@ -150,13 +198,13 @@ class PlayScene extends BaseScene {
         this.lavaFiller.setScale(this.config.width / this.lavaFiller.width, this.config.height / this.lavaFiller.height)
 
         // make the player die when touching lava
-        this.physics.add.collider(this.player, this.lava, this.player.hitLava, null, this.player)
+        this.physics.add.overlap(this.player, this.lava, this.player.hitLava, null, this.player)
 
         // change lava render depth
         this.lava.setDepth(this.lavaRenderDepth)
 
         // make the lava start moving
-        this.lava.setVelocityY(this.lavaInitSpeed)
+        this.lava.setVelocityY(this.lavaSpeed)
     }
 
     createFire() {
@@ -169,29 +217,31 @@ class PlayScene extends BaseScene {
         this.enemies = this.physics.add.group()
 
         // add a collider for the enemy getting hit
-        this.physics.add.collider(this.player.attackHitbox, this.enemies, (player, enemy) => {
-            enemy.gotHit(1)
+        this.physics.add.overlap(this.player.attackHitbox, this.enemies, (hitbox, enemy) => {
+            enemy.gotHit(this.player.attack)
         }, null, this)
 
         // add a collider for the player getting hit
         this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
-            player.gotHit(-1)
+            if (enemy.isAlive) {
+                player.gotHit(enemy.attack)
+            }
+        }, null, this)
+
+        // make enemies die when touching lava
+        this.physics.add.overlap(this.lava, this.enemies,  (lava, enemy) => {
+            enemy.hitLava()
         }, null, this)
     }
 
-    enemyHit(player, enemy) {
-        enemy.damaged(1)
+    createEnemy(enemy) {
+        this.enemies.add(enemy)
+        enemy.init()
     }
 
     createUi(config) {
          // start the game ui
          this.scene.launch('Ui', config)
-    }
-
-    update() {
-        this.player.update()
-        this.recycleWallsAndBG()
-        this.lavaCheck()
     }
 
     // moves walls that are out of the screen
@@ -234,7 +284,7 @@ class PlayScene extends BaseScene {
         // check if the lava has reached the top of the screen
         if (this.lavaFiller.y <= this.cameras.main.midPoint.y - this.config.height / 2) {
             this.lava.setVelocityY(0)
-            this.lavaMove = false
+            this.lavaFiller.y = this.cameras.main.midPoint.y - this.config.height / 2
         }
 
         // remove all platforms that are under the lava
@@ -243,6 +293,37 @@ class PlayScene extends BaseScene {
                 plat.destroy()
             }
         })
+
+        // remove all flames that are under the lava
+        this.fireEffects.getChildren().forEach(fire => {
+            if (fire.y - fire.height > this.lavaFiller.y) {
+                fire.destroy()
+            }
+        })
+
+        // remove all enemies that are under the lava
+        this.enemies.getChildren().forEach(enemy => {
+            if (enemy.y - enemy.height > this.lavaFiller.y) {
+                enemy.destroy()
+            }
+        })
+
+        this.lava.setVelocityY(this.lavaSpeed)
+    }
+
+    getHighestLayer() {
+        let high = 1000
+        this.platforms.getChildren().forEach((plat) => {
+            high = Math.min(high, plat.y)
+        })
+        return high
+    }
+
+    checkLayers() {
+        let camTop = this.cameras.main.midPoint.y - this.config.height / 2
+        if (this.getHighestLayer() > camTop) {
+            this.spawnLayer(this.getHighestLayer() - this.platformYDistance)
+        }
     }
 }
 

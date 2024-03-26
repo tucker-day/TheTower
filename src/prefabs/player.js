@@ -13,7 +13,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.physics.add.existing(this)
 
         // player config
-        this.canFly = false
+        this.canFly = true
         this.gravity = 750
         this.movementSpeed = 200
         this.jumpPower = 450
@@ -31,8 +31,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.immortal = false
 
         this.gold = 0
-        this.maxHealth = 5
+        this.maxHealth = 3
         this.health = this.maxHealth
+        this.attack = 1
 
         // attack hitbox
         this.attackHitbox = null
@@ -80,11 +81,13 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.attacking = false
 
         this.attackHitbox.setPosition(1000, 0)
+
+        // emit an event to let enemies get damaged again
+        EventsCenter.emit('attack-done')
     }
 
     endHit() {
         this.stunned = false;
-        this.checkDead()
     }
 
     createControls() {
@@ -106,7 +109,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     quickDecend() {
-        if (this.jumpPower > this.body.velocity.y && (!this.attacking || !this.stunned)) {
+        if (this.jumpPower > this.body.velocity.y && !this.attacking) {
             this.setVelocityY(this.jumpPower);
         }
     }
@@ -125,7 +128,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     // contains all while down player controls
     control() {
         // check if the player is alive, not attacking and not stunned
-        if (this.alive && !this.attacking && !this.stunned)
+        if (this.alive && !this.attacking)
         {
             // prevent moving when both left and right are down
             if (this.scene.key.RIGHT.isDown === this.scene.key.LEFT.isDown) {
@@ -213,7 +216,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.setGravityY(0)
         this.setVelocityY(0)
         this.body.setEnable(false)
-        this.scene.spawnFire(this.x, this.y)
+        this.scene.spawnFire(this.x, this.body.bottom)
         this.changeHealth(-this.maxHealth)
         this.die()
     }
@@ -239,8 +242,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             this.health = 0
         }
 
-        debugger
-
         EventsCenter.emit('update-hearts', this.health)
     }
 
@@ -251,12 +252,14 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     gotHit(damage) {
         if (!this.immortal && this.alive) {
-            this.setVelocityX(0)
-            this.changeHealth(damage)
-            this.play('p_hit')
-            this.stunned = true
-            this.getIFrames()
-            // check death is ran once 'p_hit' is complete
+            this.changeHealth(-damage)
+            if (this.health <= 0) {
+                this.die()
+            } else {
+                this.play('p_hit')
+                this.stunned = true
+                this.getIFrames()
+            }
         }
     }
 
@@ -273,12 +276,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     endIFrames() {
         this.immortal = false
         this.scene.timedEvent.remove()
-    }
-
-    checkDead() {
-        if (this.health <= 0) {
-            this.die()
-        }
     }
 }
 
