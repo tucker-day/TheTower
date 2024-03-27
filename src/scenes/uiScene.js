@@ -16,11 +16,13 @@ class UiScene extends BaseScene {
         this.eventRef = [
             {name: 'update-gold', method: this.updateGold},
             {name: 'update-hearts', method: this.updateHearts},
-            {name: 'update-lavaDistance', method: this.updateLavaDistance}
+            {name: 'update-lavaDistance', method: this.updateLavaDistance},
+            {name: 'gameOver', method: this.gameOver}
         ]
 
         // ui config from init
         this.uiConfig = null
+        this.parentScene = null
 
         // group for hearts
         this.hearts = null
@@ -41,6 +43,7 @@ class UiScene extends BaseScene {
     init(uiConfig) {
         // takes in config from start method in playScene
         this.uiConfig = uiConfig
+        this.parentScene = uiConfig.parentScene
     }
 
     create(){
@@ -85,14 +88,12 @@ class UiScene extends BaseScene {
             .setScale(this.uiConfig.gameZoom)
         
         // create gold text
-        this.goldText = this.add.text(this.config.width - this.cornerOffsetX - this.goldIcon.width * this.uiConfig.gameZoom - this.goldTextOffsetX, this.cornerOffsetY, '0', 
-            { fontSize: this.goldIcon.height * this.uiConfig.gameZoom, fill: '#fff', fontFamily: 'SilverFont' })
+        this.goldText = this.add.text(this.config.width - this.cornerOffsetX - this.goldIcon.width * this.uiConfig.gameZoom - this.goldTextOffsetX, this.cornerOffsetY, '0', this.defaultFont(this.goldIcon.height * this.uiConfig.gameZoom))
             .setOrigin(1, 0)
     }
 
     createLavaDistance() {
-        this.lavaText = this.add.text(this.config.width / 2, this.config.height - 100, '0', 
-            { fontSize: this.goldIcon.height * this.uiConfig.gameZoom, fill: '#fff', fontFamily: 'SilverFont' })
+        this.lavaText = this.add.text(this.config.width / 2, this.config.height - 100, '0', this.defaultFont(this.goldIcon.height * this.uiConfig.gameZoom))
             .setOrigin(0.5, 0)
             .setVisible(false)
     }
@@ -115,6 +116,10 @@ class UiScene extends BaseScene {
         } else {
             this.lavaText.setVisible(false)
         }
+    }
+
+    gameOver() {
+        alert('sad :(')
     }
 }
 

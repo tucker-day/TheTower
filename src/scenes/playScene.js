@@ -71,6 +71,7 @@ class PlayScene extends BaseScene {
         this.createPlatformsGroup()
         this.createEnemyGroup()
         this.createUi({
+            parentScene: this,
             gameZoom: this.uiConfig.gameZoom,
             maxHealth: this.player.maxHealth
         })
@@ -276,7 +277,7 @@ class PlayScene extends BaseScene {
 
     createUi(config) {
          // start the game ui
-         this.scene.launch('Ui', config)
+         this.scene.launch('Ui', config, this)
     }
 
     // moves walls that are out of the screen

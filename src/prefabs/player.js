@@ -74,7 +74,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     gameOver() {
-        // dosen't do anything currently. will eventually create a menu
+        EventsCenter.emit('gameOver')
     }
 
     attackDone() {
