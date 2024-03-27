@@ -35,10 +35,16 @@ class PlayScene extends BaseScene {
         // settings
         this.platformYDistance = 112
         this.wallsRenderDepth = 11
-        this.lavaInitY = 300
-        this.lavaSpeed = -50
         this.lavaRenderDepth = 10
-        this.layerGapSize = 100
+        this.layerGapSize = 90
+
+        this.lavaInitY = 300
+        this.lavaSpeed = -10
+        this.lavaMaxSpeed = -120
+        this.lavaSpeedupInitDelay = 5000
+        this.lavaSpeedupDelay = 500
+        this.lavaGradientSizeFactor = 7
+        this.gradualGold = 10
 
         // game boundries
         this.gameBoundsX = {
@@ -79,18 +85,34 @@ class PlayScene extends BaseScene {
 
         this.initSpawnLayers()
 
-        this.timedEvent = this.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                debugger
-                if (this.player.alive) {
-                    this.lavaSpeed--
-                    this.player.changeGold(1)
-                }
-            },
+        this.createLavaSpeedupEvents()
+    }
+
+    createLavaSpeedupEvents() {
+        // delay the speedup start then start speeding up the lava
+        this.lavaDelay = this.time.addEvent({
+            delay: this.lavaSpeedupInitDelay,
             callbackScope: this,
-            loop: true
+            loop: false,
+            callback: () => {
+                this.lavaSpeedup = this.time.addEvent({
+                    delay: this.lavaSpeedupDelay,
+                    callbackScope: this,
+                    loop: true,
+                    callback: this.onLavaSpeedup
+                })
+            }
         })
+    }
+
+    onLavaSpeedup() {
+        if (this.player.alive) {
+            if (this.lavaSpeed > this.lavaMaxSpeed) {
+                this.lavaSpeed--
+                this.lavaGradient.setDisplaySize(this.lavaGradient.width, this.lavaSpeed * -this.lavaGradientSizeFactor)
+            }
+            this.player.changeGold(5)
+        }
     }
 
     update() {
@@ -208,6 +230,7 @@ class PlayScene extends BaseScene {
         this.lavaGradient = this.lava.create(this.lavaFiller.x, this.lavaFiller.y, 'gradient')
             .setOrigin(0, 1)
             .setBodySize(1, 1, false)
+        this.lavaGradient.setDisplaySize(this.lavaGradient.width, this.lavaSpeed * -this.lavaGradientSizeFactor)
 
         // make the player die when touching lava
         this.physics.add.overlap(this.player, this.lava, this.player.hitLava, null, this.player)

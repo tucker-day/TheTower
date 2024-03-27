@@ -31,9 +31,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.immortal = false
 
         this.gold = 0
-        this.maxHealth = 3
+        this.maxHealth = 5
         this.health = this.maxHealth
         this.attack = 1
+        this.setDisplaySize
 
         // attack hitbox
         this.attackHitbox = null
@@ -109,7 +110,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     quickDecend() {
-        if (this.jumpPower > this.body.velocity.y && !this.attacking) {
+        if (this.jumpPower > this.body.velocity.y) {
             this.setVelocityY(this.jumpPower);
         }
     }
@@ -265,7 +266,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     getIFrames() {
         this.immortal = true
-        this.scene.timedEvent = this.scene.time.addEvent({
+        this.scene.iFrames = this.scene.time.addEvent({
             delay: this.hitIFrameDuration,
             callback: this.endIFrames,
             callbackScope: this,
@@ -275,7 +276,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     endIFrames() {
         this.immortal = false
-        this.scene.timedEvent.remove()
+        this.scene.iFrames.remove()
     }
 }
 

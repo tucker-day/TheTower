@@ -6,7 +6,7 @@ class FlyingEye extends Enemy {
 
         this.health = 3
         this.attack = 1
-        this.gold = 5
+        this.gold = 100
 
         this.movement = 40
 
