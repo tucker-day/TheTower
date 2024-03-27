@@ -19,18 +19,6 @@ class PlayScene extends BaseScene {
         }
         super(passConfig)
         this.sharedConfig = sharedConfig
-
-        // object storage
-        this.background = null
-        this.player = null
-        this.platforms = null
-        this.walls = null
-        this.lava = null
-        this.lavaFiller = null
-        this.lavaGradient = null
-        this.fireEffects = null
-        this.enemies = null
-        this.enemiesHitboxes = null
         
         // settings
         this.platformYDistance = 112
@@ -39,7 +27,7 @@ class PlayScene extends BaseScene {
         this.layerGapSize = 90
 
         this.lavaInitY = 300
-        this.lavaSpeed = -10
+        this.lavaInitSpeed = -10
         this.lavaMaxSpeed = -120
         this.lavaSpeedupInitDelay = 5000
         this.lavaSpeedupDelay = 500
@@ -58,13 +46,35 @@ class PlayScene extends BaseScene {
         }
     }
 
+    init () {
+        // object storage
+        this.background = null
+        this.player = null
+        this.platforms = null
+        this.walls = null
+        this.lava = null
+        this.lavaFiller = null
+        this.lavaGradient = null
+        this.fireEffects = null
+        this.enemies = null
+        this.enemiesHitboxes = null
+
+        // runtime variables
+        this.lavaSpeed = this.lavaInitSpeed
+
+        // events
+        this.lavaDelay = null
+        this.lavaSpeedup = null
+    }
+
     create() {
         this.createBG()
+
         this.player = new Player(...this.screenCenter, this)
-        
+
         // make the camera follow the player
         this.cameras.main.startFollow(this.player, false, 0, this.player.cameraFollowFactor, 0, this.player.cameraYOffset)
-        
+
         this.createWalls()
         this.createFire()
         this.createLava()
@@ -276,8 +286,7 @@ class PlayScene extends BaseScene {
     }
 
     createUi(config) {
-         // start the game ui
-         this.scene.launch('Ui', config, this)
+        this.scene.launch('Ui', config)
     }
 
     // moves walls that are out of the screen

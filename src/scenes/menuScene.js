@@ -12,7 +12,7 @@ class MenuScene extends BaseScene {
     }
 
     create(){
-        this.scene.start('Play')
+        this.scene.launch('Play')
     }
 }
 

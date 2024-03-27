@@ -4,7 +4,7 @@ import EventsCenter from "../scenes/eventsCenter";
 class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(x, y, scene) {
         super(scene, x, y, 'knight')
-        
+
         // save a refrence to the parent scene
         this.scene = scene
 
@@ -18,6 +18,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.movementSpeed = 200
         this.jumpPower = 450
         this.hitIFrameDuration = 1000
+        this.maxHealth = 5
+        this.initAttack = 1
         
         // camera config
         this.cameraYOffset = 40
@@ -31,10 +33,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.immortal = false
 
         this.gold = 0
-        this.maxHealth = 5
         this.health = this.maxHealth
-        this.attack = 1
-        this.setDisplaySize
+        this.attack = this.initAttack
 
         // attack hitbox
         this.attackHitbox = null
@@ -74,7 +74,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     gameOver() {
-        EventsCenter.emit('gameOver')
+        debugger
+        EventsCenter.emit('gameOver', this.gold)
     }
 
     attackDone() {

@@ -24,18 +24,11 @@ class UiScene extends BaseScene {
         this.uiConfig = null
         this.parentScene = null
 
-        // group for hearts
-        this.hearts = null
-        this.heartsPerRow = 10
-
-        // gold icon and text
-        this.goldIcon = null
-        this.goldText = null
-
         // positioning vars
         this.cornerOffsetY = 32
         this.cornerOffsetX = 32
         this.goldTextOffsetX = 10
+        this.heartsPerRow = 10
 
         this.lavaShowDistance = 250
     }
@@ -44,6 +37,13 @@ class UiScene extends BaseScene {
         // takes in config from start method in playScene
         this.uiConfig = uiConfig
         this.parentScene = uiConfig.parentScene
+
+         // group for hearts
+         this.hearts = null
+ 
+         // gold icon and text
+         this.goldIcon = null
+         this.goldText = null
     }
 
     create(){
@@ -61,7 +61,7 @@ class UiScene extends BaseScene {
         // clean up on scene shutdown
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.eventRef.map((event) => {
-                EventsCenter.on(event.name, event.method, this)
+                EventsCenter.off(event.name, event.method, this)
             })
         })
     }
@@ -118,8 +118,20 @@ class UiScene extends BaseScene {
         }
     }
 
-    gameOver() {
-        alert('sad :(')
+    gameOver(gold) {
+        this.add.text(this.config.width / 2, this.config.height / 2, 'GAME OVER', this.defaultFont(100))
+            .setOrigin(0.5, 1)
+        
+        this.add.text(this.config.width / 2, this.config.height / 2 + 75, `Your gold: ${gold}`, this.defaultFont(60))
+            .setOrigin(0.5, 1)
+
+        this.add.text(this.config.width / 2, this.config.height / 2 + 300, 'Press anything to restart', this.defaultFont(60))
+            .setOrigin(0.5, 1)
+
+        this.input.keyboard.on('keydown', () => {
+            this.parentScene.scene.restart('Play')
+            this.scene.stop('Ui')
+        })
     }
 }
 
