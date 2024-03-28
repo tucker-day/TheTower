@@ -74,7 +74,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     gameOver() {
-        debugger
         EventsCenter.emit('gameOver', this.gold)
     }
 

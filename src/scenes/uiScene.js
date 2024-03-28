@@ -125,12 +125,19 @@ class UiScene extends BaseScene {
         this.add.text(this.config.width / 2, this.config.height / 2 + 75, `Your gold: ${gold}`, this.defaultFont(60))
             .setOrigin(0.5, 1)
 
-        this.add.text(this.config.width / 2, this.config.height / 2 + 300, 'Press anything to restart', this.defaultFont(60))
+        this.add.text(this.config.width / 2, this.config.height / 2 + 300, 'Press Z to restart', this.defaultFont(50))
+            .setOrigin(0.5, 1)
+        this.add.text(this.config.width / 2, this.config.height / 2 + 350, 'Press X return to main menu', this.defaultFont(50))
             .setOrigin(0.5, 1)
 
-        this.input.keyboard.on('keydown', () => {
+        this.input.keyboard.on('keydown-Z', () => {
             this.parentScene.scene.restart('Play')
             this.scene.stop('Ui')
+        })
+        
+        this.input.keyboard.on('keydown-X', () => {
+            this.parentScene.scene.stop('Play')
+            this.scene.start('Menu')
         })
     }
 }

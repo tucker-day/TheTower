@@ -74,6 +74,15 @@ class PreloadScene extends Phaser.Scene {
             repeat: false
         })
 
+        // player attack but looping
+        this.anims.create({
+            key: 'p_attackLooping',
+            frames: this.anims.generateFrameNumbers('knight', { start: 20, end: 23 }),
+            frameRate: 10,
+            repeat: -1,
+            repeatDelay: 250
+        })
+
         // player jump
         this.anims.create({
             key: 'p_jump',
