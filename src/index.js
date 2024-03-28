@@ -7,6 +7,7 @@ import MenuScene from './scenes/menuScene.js'
 import PreloadScene from './scenes/preloadScene.js'
 import PauseScene from './scenes/pauseScene.js'
 import UiScene from './scenes/uiScene.js'
+import MenuUiScene from './scenes/menuUiScene.js'
 
 // settings shared by all scenes
 const SHARED_CONFIG = {
@@ -15,7 +16,7 @@ const SHARED_CONFIG = {
 }
 
 // list of all game scene objects
-const SCENES = [ PreloadScene, MenuScene, PlayScene, PauseScene, UiScene ]
+const SCENES = [ PreloadScene, MenuScene, MenuUiScene, PlayScene, PauseScene, UiScene ]
 
 // make an instance of all game scenes
 const initScenes = () => SCENES.map(Scene => new Scene(SHARED_CONFIG))

@@ -97,6 +97,8 @@ class PlayScene extends BaseScene {
         this.initSpawnLayers()
 
         this.createLavaSpeedupEvents()
+
+        this.scene.pause()
     }
 
     createLavaSpeedupEvents() {

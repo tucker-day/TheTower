@@ -50,6 +50,7 @@ class UiScene extends BaseScene {
         this.createEvents()
         this.createHearts()
         this.createLavaDistance()
+        this.createStartTimer()
     }
 
     createEvents() {
@@ -96,6 +97,27 @@ class UiScene extends BaseScene {
         this.lavaText = this.add.text(this.config.width / 2, this.config.height - 100, '0', this.defaultFont(this.goldIcon.height * this.uiConfig.gameZoom))
             .setOrigin(0.5, 0)
             .setVisible(false)
+    }
+
+    createStartTimer() {
+        let time = 3
+        let timerText = this.add.text(...this.screenCenter, `${time}`, this.defaultFont(250))
+            .setOrigin(0.5, 0.5)
+
+        this.lavaSpeedup = this.time.addEvent({
+            delay: 1000,
+            repeat: time,
+            callbackScope: this,
+            loop: true,
+            callback: () => {
+                time--
+                timerText.text = `${time}`
+                if (time === 0) {
+                    this.parentScene.scene.resume()
+                    timerText.setVisible(false)
+                }
+            }
+        })
     }
 
     updateGold(gold) {
