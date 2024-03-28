@@ -149,6 +149,7 @@ class UiScene extends BaseScene {
 
         this.add.text(this.config.width / 2, this.config.height / 2 + 300, 'Press Z to restart', this.defaultFont(50))
             .setOrigin(0.5, 1)
+            
         this.add.text(this.config.width / 2, this.config.height / 2 + 350, 'Press X return to main menu', this.defaultFont(50))
             .setOrigin(0.5, 1)
 

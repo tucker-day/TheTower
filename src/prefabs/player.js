@@ -173,7 +173,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             let xVel = this.body.velocity.x
             let onGround = this.body.touching.down
 
-            // check player
             // check if moving on ground with input
             if (xVel != 0 && onGround && (this.scene.key.RIGHT.isDown || this.scene.key.LEFT.isDown)) {
                 this.play('p_walk', true)
